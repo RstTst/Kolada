@@ -1,0 +1,256 @@
+buildscript {
+    repositories {
+        maven { url 'https://files.minecraftforge.net/maven' }
+        maven { url "https://plugins.gradle.org/m2/" }
+        jcenter()
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${project.kotlin_version}"
+        classpath "com.github.jengelman.gradle.plugins:shadow:5.1.0"
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.+'
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'kotlin'
+apply plugin: 'maven-publish'
+apply plugin: "com.github.johnrengelman.shadow"
+apply plugin: 'com.jfrog.bintray'
+
+version = "${project.version_major}.${project.version_minor}.${project.version_patch}"
+group = 'dev.rsttst.kolada'
+
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
+
+configurations {
+    shadedApi
+    compile.extendsFrom shadedApi
+}
+
+repositories {
+    jcenter()
+    mavenCentral()
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${project.mc_version}-${project.forge_version}"
+    shadedApi "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${project.kotlin_version}"
+    shadedApi "org.jetbrains.kotlin:kotlin-reflect:${project.kotlin_version}"
+    shadedApi "org.jetbrains.kotlinx:kotlinx-coroutines-core:${project.coroutines_version}"
+    shadedApi "org.jetbrains.kotlinx:kotlinx-serialization-runtime:${project.serialization_version}"
+}
+
+minecraft {
+    mappings channel: 'snapshot', version: project.mcp_mappings
+    //accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+}
+
+/* Theoretically, no remapping to SRG names is needed yet since no Minecraft classes are used.
+However, because this might change in the future I will leave this here anyway. */
+reobf {
+    // TODO: Source jars don't work this way
+    //sourcesJar {
+        //dependsOn createMcpToSrg
+        //setMappings createMcpToSrg.getOutput()
+    //}
+    //apiSourcesJar {
+        //dependsOn createMcpToSrg
+        //setMappings createMcpToSrg.getOutput()
+    //}
+    shadowJar {
+        dependsOn createMcpToSrg
+        setMappings createMcpToSrg.getOutput()
+    }
+    apiJar {
+        dependsOn createMcpToSrg
+        setMappings createMcpToSrg.getOutput()
+    }
+    // The default jar task is automatically remapped to SRG names
+}
+
+/* FG3 replaces the jars that are configured to be remapped to SRG names but the
+underlying JavaExec task still creates the /build/reobf<JARNAME>}/output.jar file. */
+build.doLast {
+    buildDir.eachDir {
+        if (it.name.contains('reobf')) {
+            delete it
+        }
+    }
+}
+
+processResources {
+    inputs.property "modVersion", project.version
+
+    from(sourceSets.main.resources.srcDirs) {
+        include 'META-INF/mods.toml'
+
+        expand 'modVersion': project.version
+    }
+
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'META-INF/mods.toml'
+    }
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions {
+        jvmTarget = '1.8'
+        freeCompilerArgs = ['-X', '-Xno-param-assertions', '-Xno-receiver-assertions', '-Xno-call-assertions']
+    }
+}
+
+Map<String, ?> commonJarAttributesWithTitle(String title) {
+    return [
+        "Specification-Title"     : title,
+        "Specification-Vendor"    : "RstTst",
+        "Specification-Version"   : project.version,
+        "Implementation-Title"    : title,
+        "Implementation-Version"  : project.version,
+        "Implementation-Vendor"   : "RstTst",
+        "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+    ]
+}
+
+jar {
+    manifest {
+        attributes(commonJarAttributesWithTitle("Kolada"))
+    }
+    // NOTE: FG3 fails trying to de-obfuscate a jar containing Kotlin source files (I think), so don't include the source here like JEI does
+    from sourceSets.main.output
+    archiveClassifier = ''
+}
+
+// Kotlin source files can't be remapped to SRG names, so just leave them mapped
+task sourcesJar(type: Jar) {
+    manifest {
+        attributes(commonJarAttributesWithTitle("Kolada Sources"))
+    }
+    archiveClassifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task apiJar(type: Jar) {
+    manifest {
+        attributes(commonJarAttributesWithTitle("Kolada API"))
+    }
+    archiveClassifier = 'api'
+    // NOTE: FG3 fails trying to de-obfuscate a jar containing Kotlin source files (I think), so don't include the source here like JEI does
+    from sourceSets.main.output.classesDirs //just 'sourceSets.main.output' would include unnecessary resources
+    exclude 'dev/rsttst/kolada/internal/**'
+}
+
+// Kotlin source files can't be remapped to SRG names, so just leave them mapped (for now at least)
+task apiSourcesJar(type: Jar) {
+    manifest {
+        attributes(commonJarAttributesWithTitle("Kolada API Sources"))
+    }
+    archiveClassifier = 'api-sources'
+    from sourceSets.main.kotlin // 'sourceSets.main.allSource' would include unnecessary resources
+    exclude 'dev/rsttst/kolada/internal/**'
+}
+
+// No sources-jar needed since this is intended to be used at runtime only anyway
+shadowJar {
+    manifest {
+        attributes(commonJarAttributesWithTitle("Kolada Fat-Jar"))
+    }
+    archiveClassifier = 'shadow'
+    configurations = [project.configurations.shadedApi]
+    into('third_party_licenses') {
+        from 'license/fat_jar'
+    }
+}
+
+artifacts {
+    archives jar
+    archives sourcesJar
+    archives apiJar
+    archives apiSourcesJar
+    archives shadowJar
+}
+
+Action<MavenPom> commonPomConfigure = { pom ->
+    pom.licenses {
+        license {
+            name = 'MIT'
+            distribution = 'repo'
+        }
+    }
+    pom.scm {
+        url =  'https://github.com/RstTst/Kolada'
+        connection = 'scm:git:git@github.com:RstTst/Kolada.git'
+        developerConnection = 'scm:git:git@github.com:RstTst/Kolada.git'
+        tag = 'HEAD'
+    }
+    pom.developers {
+        developer {
+            name = 'RstTst'
+        }
+    }
+    pom.issueManagement {
+        system = 'github'
+        url = 'https://github.com/RstTst/Kolada/issues'
+    }
+}
+
+/* Using FG3's fg.deobf('[Dependency]') function makes it so that maven-dependencies
+ with 'compile' scope don't get loaded. Maybe there is or will be a way to configure this.
+ For now I will leave it in the pom anyway
+ */
+Action<MavenPom> dependencyPomConfigureOfConfiguration(Configuration configuration) {
+    return {
+        it.withXml {
+            def node = asNode().appendNode('dependencies')
+            configuration.allDependencies.each {
+                def childNode = node.appendNode('dependency')
+                childNode.appendNode('groupId', it.group)
+                childNode.appendNode('artifactId', it.name)
+                childNode.appendNode('version', it.version)
+                childNode.appendNode('scope', 'compile')
+            }
+        }
+    }
+}
+
+// Source-jars currently don't get loaded by the IDE with FG3 (at least with this configuration)
+publishing {
+    publications {
+        full(MavenPublication) {
+            artifactId = 'kolada'
+            artifact source: jar, classifier: ''
+            artifact source: sourcesJar, classifier: 'sources'
+            pom commonPomConfigure
+            pom dependencyPomConfigureOfConfiguration(configurations.shadedApi)
+        }
+        api(MavenPublication) {
+            artifactId = 'kolada-api'
+            artifact source: apiJar, classifier: ''
+            artifact source: apiSourcesJar, classifier: 'sources'
+            pom commonPomConfigure
+            pom dependencyPomConfigureOfConfiguration(configurations.shadedApi)
+        }
+        fat(MavenPublication) {
+            artifactId = 'kolada-runtime'
+            artifact source: shadowJar, classifier: ''
+            // No sources-jar needed since this is intended to be used only at runtime anyway
+            pom commonPomConfigure
+        }
+    }
+}
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+    pkg {
+        repo = 'Minecraft-Forge-Mods'
+        name = 'Kolada'
+        licenses = ['MIT']
+        vcsUrl = 'https://github.com/RstTst/Kolada.git'
+        version {
+            name = project.version
+            released  = new Date()
+        }
+    }
+    publications = ['full', 'api', 'fat']
+}
