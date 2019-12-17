@@ -30,8 +30,8 @@ repositories {
 
 dependencies {
     // *UNCOMMENT LIBRARIES NEEDED*
-    //compileOnly 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.50'
-    //compileOnly 'org.jetbrains.kotlin:kotlin-reflect:1.3.50'
+    //compileOnly 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.60'
+    //compileOnly 'org.jetbrains.kotlin:kotlin-reflect:1.3.60'
     //compileOnly 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2'
     //compileOnly 'org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.13.0'
     compileOnly fg.deobf('dev.rsttst.kolada:kolada-api:1.0')
@@ -59,7 +59,7 @@ Replaces the default FML `@Mod` annotation and defines the entry point of your m
 
 Object declarations are the only valid target of this annotation.  
 Code that would go in the default constructor of an `@Mod` annotated class can be put inside the `init` block.
-The value parameter specifies the mod-ID of your mod.
+The `value` parameter specifies the mod-ID of your mod.
 ```kotlin
 @KMod(MOD_ID)
 object Mod {
@@ -78,15 +78,15 @@ object Mod {
 ```
 (Note the use of the `getModEventBus()` top-level function. It returns the event bus for the mod currently being loaded.
 This replaces the `FMLJavaModLoadingContext.get().getModEventBus()` call.)
-#### `@KEventSubscriber`
-Replaces the default FML `@EventSubscriber` annotation and marks an object declaration as an event subscriber.
+#### `@KMod.KEventBusSubscriber`
+Replaces the default FML `@Mod.EventBusSubscriber` annotation and marks an object declaration as an event subscriber.
 
 Object declarations are the only valid target of this annotation.  
 All methods of the object annotated with `@SubscribeEvent` will be registered at the event bus specified by the `bus` parameter.
 The `Dist`(s) on which the methods will get registered can be selected via the `value` parameter.  
-Every object declaration annotated with `@KEventSubscriber` that is not nested inside of a `@KMod` annotated object declaration should have the `modId` parameter explicitly specified.
+Every object declaration annotated with `@KMod.KEventBusSubscriber` that is not nested inside of a `@KMod` annotated object declaration should have the `modId` parameter explicitly specified.
 ```kotlin
-@KEventSubscriber(value = [Dist.CLIENT, Dist.SERVER], bus = KEventSubscriber.Bus.MOD, modId = "mod")
+@KMod.KEventBusSubscriber(value = [Dist.CLIENT, Dist.SERVER], bus = KMod.KEventBusSubscriber.Bus.MOD, modId = "REPLACE_WITH_MOD_ID")
 object EventSubscriber {
     
    @SubscribeEvent

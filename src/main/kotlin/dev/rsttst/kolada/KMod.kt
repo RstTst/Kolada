@@ -20,7 +20,7 @@ annotation class KMod(val value: String) {
      * Object declarations are the only valid target of this annotation.
      * All methods of the object annotated with [@SubscribeEvent][net.minecraftforge.eventbus.api.SubscribeEvent] will be registered at the event bus specified by the [bus] parameter.
      * The `Dist`(s) on which the methods will get registered can be selected via the [value] parameter.
-     * Every object declaration annotated with [@KEventBusSubscriber][KEventBusSubscriber] that is not nested inside of a [@KMod][KMod] annotated object declaration should have the [modId] parameter explicitly specified.
+     * Every object declaration annotated with [@KMod.KEventBusSubscriber][KEventBusSubscriber] that is not nested inside of a [@KMod][KMod] annotated object declaration should have the [modId] parameter explicitly specified.
      * @param value The `Dist`(s) on which the methods will get registered. Defaults to all Dists.
      * @param bus Specifies at which event bus the methods will get registered. Defaults to [Bus.FORGE]
      * @param modId The mod-ID of the mod this event bus subscriber belongs to. Defaults to an empty String. Explicitly set this parameter if this event bus subscriber is not nested inside your [@KMod][KMod] annotated mod entry point.

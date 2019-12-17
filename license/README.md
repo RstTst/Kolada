@@ -30,12 +30,12 @@ These do not directly apply to Kolada:
     + Source: [GitHub repository](https://github.com/JetBrains/java-annotations)
 * **Kotlinx Coroutines Core:**  
     + Copyright 2016-2019 JetBrains s.r.o.
-    + License: [Apache License Version 2.0*](fat-jar/Apache-2.0-LICENSE.txt)
+    + License: [Apache License Version 2.0](fat-jar/Apache-2.0-LICENSE.txt)
     + Notice as required by the Apache License Version 2.0, section 4(d): [kotlinx.coroutines-NOTICE](fat-jar/kotlinx.coroutines-NOTICE.txt)
     + Source: [GitHub Repository](https://github.com/JetBrains/kotlin).
 * **Kotlinx Serialization Runtime:**
     + Copyright 2017-2019 JetBrains s.r.o 
-    + License: [Apache License Version 2.0*](fat-jar/Apache-2.0-LICENSE.txt)
+    + License: [Apache License Version 2.0](fat-jar/Apache-2.0-LICENSE.txt)
     + Notice as required by the Apache License Version 2.0, section 4(d): [kotlinx.serialization-NOTICE](fat-jar/kotlinx.serialization-NOTICE.txt)
     + Source: [GitHub Repository](https://github.com/Kotlin/kotlinx.serialization)
 

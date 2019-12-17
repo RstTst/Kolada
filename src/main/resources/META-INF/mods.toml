@@ -27,7 +27,7 @@ Kotlin Language Adapter for Minecraft Forge (MC version 1.14.4).
 Information for developers available on GitHub: https://github.com/RstTst/Kolada
 License information at: https://github.com/RstTst/Kolada/blob/master/license/README.md
 
-For MC version 1.8.4 or below refer to Shadowfacts' Forgelin (https://www.curseforge.com/minecraft/mc-mods/shadowfacts-forgelin/)
+For MC version 1.8.4 or below refer to Shadowfacts' Forgelin: https://www.curseforge.com/minecraft/mc-mods/shadowfacts-forgelin/
 '''
 [[dependencies.kolada]] #optional
     modId="forge" #mandatory

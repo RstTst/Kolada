@@ -50,7 +50,6 @@ public class KoladaModContainer extends ModContainer {
         final List<ModLoadingStage> defaultHandlerStages = Arrays.asList(CREATE_REGISTRIES, LOAD_REGISTRIES, COMMON_SETUP, SIDED_SETUP, ENQUEUE_IMC, PROCESS_IMC, COMPLETE, GATHERDATA);
         final Consumer<LifecycleEvent> defaultHandler = createHandler(this::fireEvent);
         defaultHandlerStages.forEach(stage -> triggerMap.put(stage, defaultHandler));
-http://export.mcpbot.bspk.rs/
         triggerMap.put(ModLoadingStage.CONSTRUCT, createHandler(this::constructMod));
 
         eventBus = BusBuilder.builder()
